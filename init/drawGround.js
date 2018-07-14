@@ -1,5 +1,9 @@
-export default function (ctx, img) {
-    const num = 0.125; //图片缩小倍数
+import drawImg from './drawImg.js';
+export default function (ctx, data) {
+    let {
+        'ground': img,
+        'ground-size': num //图片缩小倍数
+    } = data
     let {
         height: imgH,
         width: imgW
@@ -16,15 +20,21 @@ export default function (ctx, img) {
         if (count % 16 == 0) {
             ctx.clearRect(0, canH - imgH, canW, imgH);
             if (flag) {
-                for (let i = 0, l = Math.ceil(canW / imgW); i <= l; i++) {
-                    ctx.drawImage(img, i * Math.floor(imgW), canH - imgH, imgW, imgH);
-                    flag = false;
-                }
+                drawImg(ctx, img, {
+                    imgW,
+                    imgH,
+                    Y: canH - imgH,
+                })
+                flag = false;
+
             } else {
-                for (let i = 0, l = Math.ceil(canW / imgW); i <= l; i++) {
-                    ctx.drawImage(img, (i - 1) * Math.floor(imgW) + imgW / 2, canH - imgH, imgW, imgH);
-                    flag = true;
-                }
+                drawImg(ctx, img, {
+                    imgW,
+                    imgH,
+                    Y: canH - imgH,
+                    X: -imgW / 2
+                })
+                flag = true;
             }
         }
     }());

@@ -1,7 +1,8 @@
 import obj from './init/res.js'; //初始化加载资源
 import loading from './init/loading.js'; //画加载动画
-import drawGround from './init/drawGround.js';  //画地面
+import drawGround from './init/drawGround.js'; //画地面
 
+import drawCloud from './init/drawCloud.js'; //绘画云朵
 //资源库
 const res = {
     //本地资源地址
@@ -45,17 +46,21 @@ const ctx = canvas.getContext('2d');
 
 
 const init = (data) => {
-    drawGround(ctx, data['ground']); //绘制地面
+    drawGround(ctx, data); //绘制地面
+    drawCloud(ctx, data) //绘画云朵
 }
 
 obj(res, (index) => {
     //console.log(`资源加载完成:${index}%`)
     loading(ctx, index, res.color);
 }).then(data => {
+    for (let item in data) {
+        data[item + '-size'] = 0.125;
+    }
     setTimeout(() => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.fillStyle='rgb(78,192,203)'
-        ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
+        ctx.fillStyle = 'rgb(78,192,203)'
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         init(data);
     }, 500)
 
