@@ -16,6 +16,11 @@
                 }, self.timeout);
             });
     }
+
+    //随机数
+    window.random = (min = 0, max = 0) => {
+        return Math.floor(Math.random() * (max - min + 1) + min);
+    }
 }());
 
 const loadImg = (path) => {
@@ -35,7 +40,7 @@ const getRes = (res = []) => {
     let newResArr = []
     if (res.local) {
         newResArr = res.local.map((item) => {
-            return `../pic/${item}`
+            return `./pic/${item}`
         })
     }
     if (res.long) {

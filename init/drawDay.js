@@ -62,6 +62,5 @@ export default function (ctx, data) {
             Y: canH - groundH - dayPrairieImgH,
             X: 0
         })
-
     }());
 }

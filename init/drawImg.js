@@ -1,4 +1,4 @@
-export default function (ctx, img, size) {
+export default  (ctx, img, size) =>{
     let {
         height: canH,
         width: canW
@@ -10,6 +10,6 @@ export default function (ctx, img, size) {
             Y = 0
     } = size;
     for (let i = 0, l = Math.ceil(canW / imgW); i <= l; i++) {
-        ctx.drawImage(img, X + i * imgW, Y, imgW, imgH);
+        ctx.drawImage(img, X + i * Math.floor(imgW), Y, imgW, imgH);
     }
 }

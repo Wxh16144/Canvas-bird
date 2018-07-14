@@ -2,14 +2,25 @@ import obj from './init/res.js'; //初始化加载资源
 import loading from './init/loading.js'; //画加载动画
 import drawGround from './init/drawGround.js'; //画地面
 
-import drawCloud from './init/drawCloud.js'; //绘画云朵
+import drawDay from './init/drawDay.js'; //绘画白天资源
+import drawNight from './init/drawNight.js'; //绘画白天资源
+
+import drawConduit from './init/drawConduit.js'; //绘制一组上下水管
+
+import drawBird from './init/drawBird.js'; //绘制会会的鸟
 //资源库
 const res = {
     //本地资源地址
     local: [
         'bird-1.png',
         'bird-2.png',
-        'bird-3.png',
+        'bird-3.png', 
+        'bird-up-1.png',
+        'bird-up-2.png',
+        'bird-up-3.png', 
+        'bird-down-1.png',
+        'bird-down-2.png',
+        'bird-down-3.png',
         'conduit.png',
         'conduit-down.png',
         'conduit-up.png',
@@ -34,6 +45,10 @@ const res = {
     color: {
         init: 'rgba(0,255,0,.1)',
         ok: 'rgba(0,255,0,.6)',
+    },
+    couduit: {
+        upDownSpace: 200, //两个水管上下的间隙
+        leftRightSpace: 350 //水管左右的间隙
     }
 }
 
@@ -44,11 +59,33 @@ const ctx = canvas.getContext('2d');
 
 
 
-
+let index = 0;
 const init = (data) => {
+
+    (function start() {
+        //index--;
+        window.requestAnimationFrame(start);
+
+        drawDay(ctx, data); //绘画白天静态资源
+        // drawNight(ctx, data); // 绘画晚上的静态资源
+
+
+        for (let i = 1; i < 7; i++) {
+            drawConduit(ctx, data, res.couduit, index + 250 * i, 550 - i * 50); //绘画一组上下水管
+            //drawConduit(ctx工具箱,图片,水管配置,水管距离左边的距离)
+        }
+    }());
     drawGround(ctx, data); //绘制地面
-    drawCloud(ctx, data) //绘画云朵
+    drawBird(ctx, data, 150, 350); //绘制小鸟
+
+
+
+
+
 }
+
+
+
 
 obj(res, (index) => {
     //console.log(`资源加载完成:${index}%`)
@@ -59,14 +96,16 @@ obj(res, (index) => {
     }
     setTimeout(() => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.fillStyle = 'rgb(78,192,203)'
+        ctx.fillStyle = 'rgb(78,192,203)' //白天背景
+        // ctx.fillStyle = 'rgb(0,146,159)' // 晚上背景
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         init(data);
     }, 500)
 
-    // window.addEventListener('resize', () => {
-    //     canvas.height = window.innerHeight;
-    //     canvas.width = window.innerWidth;
-    //     init(data)
-    // }, true)
+    window.addEventListener('resize', () => {
+        setTimeout(() => {
+            window.location.reload(true);
+        }, 500); //用了延迟 为了防止出现自适应发生留白
+    }, true)
+
 })

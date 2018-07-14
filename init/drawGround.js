@@ -1,5 +1,5 @@
 import drawImg from './drawImg.js';
-export default function (ctx, data) {
+export default (ctx, data) => {
     let {
         'ground': img,
         'ground-size': num //图片缩小倍数
@@ -14,10 +14,10 @@ export default function (ctx, data) {
     } = ctx.canvas; //获取画布大小
     imgW *= num;
     imgH *= num;
-    let flag = false;
+    let flag=false;
     (function drawGround() {
         const count = window.requestAnimationFrame(drawGround);
-        if (count % 16 == 0) {
+        if (count % 13 == 0) {
             ctx.clearRect(0, canH - imgH, canW, imgH);
             if (flag) {
                 drawImg(ctx, img, {
@@ -26,7 +26,6 @@ export default function (ctx, data) {
                     Y: canH - imgH,
                 })
                 flag = false;
-
             } else {
                 drawImg(ctx, img, {
                     imgW,

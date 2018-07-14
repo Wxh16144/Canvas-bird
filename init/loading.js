@@ -43,7 +43,7 @@ class loading {
     }
 }
 
-export default function (ctx, index, color) {
+export default (ctx, index, color) => {
     const load = new loading(ctx, color.init, color.ok);
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
