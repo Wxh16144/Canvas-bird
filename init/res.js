@@ -1,3 +1,23 @@
+//兼容requestAnimationFrame
+(function () {
+    if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = (window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            window.oRequestAnimationFrame ||
+            window.msRequestAnimationFrame ||
+            function (callback) {
+                var self = this,
+                    start, finish;
+                return window.setTimeout(function () {
+                    start = +new Date();
+                    callback(start);
+                    finish = +new Date();
+                    self.timeout = 1000 / 60 - (finish - start);
+                }, self.timeout);
+            });
+    }
+}());
+
 const loadImg = (path) => {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -26,18 +46,18 @@ const getRes = (res = []) => {
     return newResArr
 };
 
-export default async function (res = [],call) {
+export default async function (res = [], call) {
     const obj = {};
-    const arr=getRes(res);
-    let index=1;
-    
+    const arr = getRes(res);
+    let index = 1;
+
     for (let item of arr) {
         const img = await loadImg(item).then(data => data);
         const str = item.lastIndexOf('/'); //计算出最后一个反斜杠位置
         const newItem = item.substring(str + 1);
         obj[newItem.replace(/\.(png|jpg)$/, '')] = img;
         //资源加载进度条
-        call(Math.ceil(index++ / arr.length * 100));
-    }
-    return obj
-}
+        call(Math.ceil(index++/ arr.length * 100));
+            }
+            return obj
+        }
