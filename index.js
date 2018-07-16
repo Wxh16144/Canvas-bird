@@ -14,10 +14,10 @@ const res = {
     local: [
         'bird-1.png',
         'bird-2.png',
-        'bird-3.png', 
+        'bird-3.png',
         'bird-up-1.png',
         'bird-up-2.png',
-        'bird-up-3.png', 
+        'bird-up-3.png',
         'bird-down-1.png',
         'bird-down-2.png',
         'bird-down-3.png',
@@ -64,23 +64,19 @@ const init = (data) => {
 
     (function start() {
         //index--;
-        window.requestAnimationFrame(start);
+        const count = window.requestAnimationFrame(start);
 
+        let a = drawBird(ctx, data, 150, 350, count); //绘制小鸟
         drawDay(ctx, data); //绘画白天静态资源
         // drawNight(ctx, data); // 绘画晚上的静态资源
 
 
-        for (let i = 1; i < 7; i++) {
+        for (let i = 1; i < 2; i++) {
             drawConduit(ctx, data, res.couduit, index + 250 * i, 550 - i * 50); //绘画一组上下水管
             //drawConduit(ctx工具箱,图片,水管配置,水管距离左边的距离)
         }
     }());
     drawGround(ctx, data); //绘制地面
-    drawBird(ctx, data, 150, 350); //绘制小鸟
-
-
-
-
 
 }
 

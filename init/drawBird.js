@@ -1,4 +1,6 @@
-export default (ctx, data, X = 0, Y = 0) => {
+let index = 1,
+    speed = 1;
+export default (ctx, data, X = 0, Y = 0, status = 0) => {
     const num = 0.65; //鸟的缩放大小
     let {
         'bird-1': b1,
@@ -14,14 +16,11 @@ export default (ctx, data, X = 0, Y = 0) => {
     H *= num;
     W *= num;
     //ctx.drawImage(b1, X, Y, W, H);
-    let index = 1,
-        speed = 1;
-    (function fly() {
-        // ctx.rotate(-Math.PI / 4);
-        if (window.requestAnimationFrame(fly) % 6 == 0) {
-            // console.log(1)
-            // const img = 'b' + index++;
 
+    (function fly() {
+        //ctx.rotate(-Math.PI / 4);
+        if (status % 3 == 0) {
+            // const img = 'b' + index++;
             switch (index += speed) {
                 case 1:
                     ctx.drawImage(b1, X, Y, W, H);
