@@ -61,22 +61,34 @@ const ctx = canvas.getContext('2d');
 
 let index = 0;
 const init = (data) => {
-
+    let throttle = 0;
     (function start() {
-        //index--;
-        const count = window.requestAnimationFrame(start);
 
-        let a = drawBird(ctx, data, 150, 350, count); //绘制小鸟
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        window.requestAnimationFrame(start);
+        // index-=10;
+        index--
+      
+        ctx.fillStyle = 'rgb(78,192,203)' //白天背景
+        // ctx.fillStyle = 'rgb(0,146,159)' // 晚上背景
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
         drawDay(ctx, data); //绘画白天静态资源
         // drawNight(ctx, data); // 绘画晚上的静态资源
 
-
-        for (let i = 1; i < 2; i++) {
+        for (let i = 1; i < 6; i++) {
             drawConduit(ctx, data, res.couduit, index + 250 * i, 550 - i * 50); //绘画一组上下水管
             //drawConduit(ctx工具箱,图片,水管配置,水管距离左边的距离)
         }
+
+        // if (Date.now() > throttle) {
+            drawBird(ctx, data, 150, 350); //绘制小鸟
+           // drawGround(ctx, data, true); //绘制地面
+            throttle = Date.now() + 170;
+        
     }());
-    drawGround(ctx, data); //绘制地面
+
+
 
 }
 
@@ -87,14 +99,13 @@ obj(res, (index) => {
     //console.log(`资源加载完成:${index}%`)
     loading(ctx, index, res.color);
 }).then(data => {
+    console.log(data);
+
     for (let item in data) {
         data[item + '-size'] = 0.125;
     }
     setTimeout(() => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.fillStyle = 'rgb(78,192,203)' //白天背景
-        // ctx.fillStyle = 'rgb(0,146,159)' // 晚上背景
-        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         init(data);
     }, 500)
 
