@@ -1,15 +1,9 @@
 import obj from './init/res.js'; //初始化加载资源
 import loading from './init/loading.js'; //画加载动画
-import drawGround from './init/drawGround.js'; //画地面
-
-import drawDay from './init/drawDay.js'; //绘画白天资源
-import drawNight from './init/drawNight.js'; //绘画白天资源
-
-import drawConduit from './init/drawConduit.js'; //绘制一组上下水管
-
-import drawBird from './init/drawBird.js'; //绘制会会的鸟
-
-import startModule from './init/start.js'; //开始游戏
+import {
+    startModule,
+    setGonduitArr
+} from './init/start.js'; //开始游戏
 //资源库
 const res = {
     //本地资源地址
@@ -49,8 +43,8 @@ const res = {
         ok: 'rgba(0,255,0,.6)',
     },
     couduit: {
-        upDownSpace: 250, //两个水管上下的间隙
-        leftRightSpace: 350 //水管左右的间隙
+        upDownSpace: 280, //两个水管上下的间隙
+        leftRightSpace: 200 //水管左右的间隙
     }
 }
 
@@ -61,35 +55,17 @@ const ctx = canvas.getContext('2d');
 
 
 
-let index = 0;
+let status = false,
+    day = true;
 const init = (data) => {
     let throttle = 0;
+    let arr = setGonduitArr(ctx, data, res);
     (function start() {
-
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         window.requestAnimationFrame(start);
-        // index-=10;
-        index--
-
-        ctx.fillStyle = 'rgb(78,192,203)' //白天背景
-        // ctx.fillStyle = 'rgb(0,146,159)' // 晚上背景
-        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-        drawDay(ctx, data); //绘画白天静态资源
-        // drawNight(ctx, data); // 绘画晚上的静态资源
-
-        for (let i = 1; i <= 60; i++) {
-            drawConduit(ctx, data, res.couduit, index + 250 * i, 500); //绘画一组上下水管
-            //drawConduit(ctx工具箱,图片,水管配置,水管距离左边的距离)
-        }
-
-        // if (Date.now() > throttle) {
-        let { x, y } = startModule(ctx);
-        drawBird(ctx, data, x, y, 'down'); //绘制小鸟
-        drawGround(ctx, data, true); //绘制地面
-        throttle = Date.now() + 170;
-
-
+        startModule(ctx, data, res, arr, status, day);
+        //切换白天和黑夜;
+        (throttle++) % 330 == 0 ? day = !day : null;
     }());
 
 }
@@ -114,5 +90,12 @@ obj(res, (index) => {
             window.location.reload(true);
         }, 500); //用了延迟 为了防止出现自适应发生留白
     }, true)
-
+    //单击开始
+    canvas.addEventListener('click', () => {
+        status = true;
+    }, false);
+    //键盘空格开始
+    window.addEventListener('keyup', (e) => {
+        e.keyCode == 32 ? status = true : null;
+    }, false)
 })
