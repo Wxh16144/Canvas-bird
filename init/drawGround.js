@@ -1,5 +1,5 @@
 import drawImg from './drawImg.js';
-let flag = false;
+let flag = false, index = 0;
 export default (ctx, data, status = false) => {
     let {
         'ground': img,
@@ -16,22 +16,36 @@ export default (ctx, data, status = false) => {
     imgW *= num;
     imgH *= num;
     (function drawGround() {
-        ctx.clearRect(0, canH - imgH, canW, imgH);
-        if (flag && status) {
+
+
+        //如果地图是静置的
+        if (!status) {
             drawImg(ctx, img, {
                 imgW,
                 imgH,
                 Y: canH - imgH,
             })
-            flag = false;
         } else {
-            drawImg(ctx, img, {
-                imgW,
-                imgH,
-                Y: canH - imgH,
-                X: -imgW / 2
-            })
-            flag = true;
+            //地图不是静置的
+            ctx.clearRect(0, canH - imgH, canW, imgH);
+            let a = index++ % 9;
+            if (a == 0) {
+                flag = !flag
+            }
+            if (flag) {
+                drawImg(ctx, img, {
+                    imgW,
+                    imgH,
+                    Y: canH - imgH,
+                })
+            } else {
+                drawImg(ctx, img, {
+                    imgW,
+                    imgH,
+                    Y: canH - imgH,
+                    X: -imgW / 2
+                })
+            }
         }
     }());
 }

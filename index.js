@@ -8,6 +8,8 @@ import drawNight from './init/drawNight.js'; //绘画白天资源
 import drawConduit from './init/drawConduit.js'; //绘制一组上下水管
 
 import drawBird from './init/drawBird.js'; //绘制会会的鸟
+
+import startModule from './init/start.js'; //开始游戏
 //资源库
 const res = {
     //本地资源地址
@@ -47,7 +49,7 @@ const res = {
         ok: 'rgba(0,255,0,.6)',
     },
     couduit: {
-        upDownSpace: 200, //两个水管上下的间隙
+        upDownSpace: 250, //两个水管上下的间隙
         leftRightSpace: 350 //水管左右的间隙
     }
 }
@@ -68,7 +70,7 @@ const init = (data) => {
         window.requestAnimationFrame(start);
         // index-=10;
         index--
-      
+
         ctx.fillStyle = 'rgb(78,192,203)' //白天背景
         // ctx.fillStyle = 'rgb(0,146,159)' // 晚上背景
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -76,19 +78,19 @@ const init = (data) => {
         drawDay(ctx, data); //绘画白天静态资源
         // drawNight(ctx, data); // 绘画晚上的静态资源
 
-        for (let i = 1; i < 6; i++) {
-            drawConduit(ctx, data, res.couduit, index + 250 * i, 550 - i * 50); //绘画一组上下水管
+        for (let i = 1; i <= 60; i++) {
+            drawConduit(ctx, data, res.couduit, index + 250 * i, 500); //绘画一组上下水管
             //drawConduit(ctx工具箱,图片,水管配置,水管距离左边的距离)
         }
 
         // if (Date.now() > throttle) {
-            drawBird(ctx, data, 150, 350); //绘制小鸟
-           // drawGround(ctx, data, true); //绘制地面
-            throttle = Date.now() + 170;
-        
+        let { x, y } = startModule(ctx);
+        drawBird(ctx, data, x, y, 'down'); //绘制小鸟
+        drawGround(ctx, data, true); //绘制地面
+        throttle = Date.now() + 170;
+
+
     }());
-
-
 
 }
 
@@ -99,8 +101,6 @@ obj(res, (index) => {
     //console.log(`资源加载完成:${index}%`)
     loading(ctx, index, res.color);
 }).then(data => {
-    console.log(data);
-
     for (let item in data) {
         data[item + '-size'] = 0.125;
     }
