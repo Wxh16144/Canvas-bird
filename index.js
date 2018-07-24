@@ -1,6 +1,7 @@
 import obj from './init/res.js'; //初始化加载资源
 import loading from './init/loading.js'; //画加载动画
 import {
+    getGoldPoint,
     startModule,
     setGonduitArr
 } from './init/start.js'; //开始游戏
@@ -56,14 +57,19 @@ const ctx = canvas.getContext('2d');
 
 
 let status = false,
-    day = true;
+    day = true,
+    time,
+    birdStatus,
+    bird = getGoldPoint(ctx, 'lt');
 const init = (data) => {
     let throttle = 0;
     let arr = setGonduitArr(ctx, data, res);
+
     (function start() {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         window.requestAnimationFrame(start);
-        startModule(ctx, data, res, arr, status, day);
+        time ? time++ : null;
+        startModule(ctx, data, res, arr, status, day, time, birdStatus, bird);
         //切换白天和黑夜;
         (throttle++) % 330 == 0 ? day = !day : null;
     }());
@@ -71,6 +77,16 @@ const init = (data) => {
 }
 
 
+
+const up = () => {
+    status = true;
+    time = 0.25;
+    birdStatus = 'up';
+    bird.y=100;
+}
+const down = () => {
+    birdStatus = 'down'
+}
 
 
 obj(res, (index) => {
@@ -90,12 +106,24 @@ obj(res, (index) => {
             window.location.reload(true);
         }, 500); //用了延迟 为了防止出现自适应发生留白
     }, true)
-    //单击开始
-    canvas.addEventListener('click', () => {
-        status = true;
+    //触摸开始
+    canvas.addEventListener('touchstart', () => {
+        up();
     }, false);
-    //键盘空格开始
-    window.addEventListener('keyup', (e) => {
-        e.keyCode == 32 ? status = true : null;
-    }, false)
+    //触摸抬起
+    canvas.addEventListener('touchend', () => {
+        down()
+    }, false);
+    //鼠标单击开始
+    canvas.addEventListener('mousedown', () => {
+        up();
+    }, false);
+    //鼠标单击抬起
+    canvas.addEventListener('mouseup', () => {
+        down()
+    }, false);
+    // //键盘空格开始
+    // window.addEventListener('keyup', (e) => {
+    //     e.keyCode == 32 ? status = true : null;
+    // }, false)
 })
