@@ -28,7 +28,6 @@ export default (ctx, data, X = 0, Y = 0, direction, time = 0.8) => {
     Y -= H / 2; //鸟的中心位置
     //ctx.drawImage(b1, X, Y, W, H);
     // Y = (9.8 + time * time) / 2;
-    console.log(time);
     (function fly() {
         //ctx.rotate(-Math.PI / 4);
         let img1 = b1,

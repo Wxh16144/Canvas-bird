@@ -51,15 +51,33 @@ export default (ctx, data, couduit, X = 0, Y = 500) => {
 
     //绘制下半截水管
     (function () {
+        // 计算下水管可以延伸的最大高度（到地面为止）
+        let maxSurplusH = canH - (Y + conduitUpImgH) - groundImgH;
+        // 确保不会绘制到地面以下
+        let surplusH = Math.max(0, maxSurplusH);
+        
+        // 先绘制水管主体，从Y位置开始，确保完全覆盖到帽子下方
+        if (surplusH > 0) {
+            // 主体从Y开始绘制，高度包含帽子高度加剩余高度
+            ctx.drawImage(conduitImg, X + 3, Y, conduitImgW, conduitUpImgH + surplusH);
+        }
+        
+        // 后绘制水管帽子，完全覆盖主体顶部
         ctx.drawImage(conduitUpImg, X, Y, conduitUpImgW, conduitUpImgH);
-        let surplusH = canH - (Y + conduitUpImgH) - groundImgH;
-        ctx.drawImage(conduitImg, X + 3, Y + conduitUpImgH-2, conduitImgW, surplusH+2)
 
     }());
     // 绘制上半截水管
     (function () {
-        ctx.drawImage(conduitDownImg, X, Y - couduit.upDownSpace, conduitDownImgW, conduitDownImgH);
-        let surplusH = Y - couduit.upDownSpace+1;
-        ctx.drawImage(conduitImg, X + 3, -1, conduitImgW, surplusH+2)
+        let pipeTopY = Y - couduit.upDownSpace;
+        let surplusH = pipeTopY;
+        
+        // 先绘制水管主体，从顶部到帽子底部
+        if (surplusH > 0) {
+            // 主体高度包含到帽子底部再多一点
+            ctx.drawImage(conduitImg, X + 3, 0, conduitImgW, pipeTopY + conduitDownImgH);
+        }
+        
+        // 后绘制水管帽子，覆盖主体底部
+        ctx.drawImage(conduitDownImg, X, pipeTopY, conduitDownImgW, conduitDownImgH);
     }());
 }
