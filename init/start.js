@@ -4,6 +4,23 @@ import drawNight from './drawNight.js'; //绘画白天资源
 import drawConduit from './drawConduit.js'; //绘制一组上下水管
 import drawBird from './drawBird.js'; //绘制会飞的鸟
 
+//生成随机数
+const random = (min, max) => {
+  return Math.random() * (max - min) + min;
+}
+
+//绘制分数
+const drawScore = (ctx, score) => {
+  ctx.save();
+  ctx.font = 'bold 40px Arial';
+  ctx.fillStyle = '#fff';
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 3;
+  ctx.strokeText(score, 30, 50);
+  ctx.fillText(score, 30, 50);
+  ctx.restore();
+}
+
 
 
 
@@ -110,7 +127,7 @@ const getGone = (ctx, X, couduit, size) => {
 }
 
 
-export const startModule = (ctx, data, res, arr, status, day, time, birdStatus,bird) => {
+export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, bird) => {
   if (day) {
     ctx.fillStyle = 'rgb(78,192,203)' //白天背景
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -120,6 +137,30 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus,b
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     drawNight(ctx, data); // 绘画晚上的静态资源
   }
+  
+  // 获取地面高度
+  let groundHeight = data['ground'].height * data['ground-size'];
+  let canvasHeight = ctx.canvas.height;
+  
+  // 应用重力和速度
+  if (status) {
+    bird.velocity += bird.gravity;
+    bird.y += bird.velocity;
+    
+    // 检查是否撞到地面
+    if (bird.y >= canvasHeight - groundHeight - 30) {
+      bird.y = canvasHeight - groundHeight - 30;
+      bird.velocity = 0;
+      bird.gameOver = true;
+    }
+    
+    // 检查是否飞出上边界
+    if (bird.y <= 30) {
+      bird.y = 30;
+      bird.velocity = 0;
+    }
+  }
+  
   let {
     x,
     y
@@ -129,12 +170,18 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus,b
 
 
   arr.map((item, index, arr) => {
-    item.conduitDownX--; //控制水管向右移动
+    if (status && !bird.gameOver) {
+      item.conduitDownX -= 2; //控制水管向右移动
+    }
 
     //判断第一个水管是否左边出去了
     if (index === 0) {
       if (item.conduitDownX < -(item.ciunduitSize * 2 + item.counduit.leftRightSpace)) {
         arr.shift(); //删除第一根水管
+        // 通过水管，得分
+        if (status && !bird.gameOver) {
+          bird.score++;
+        }
       }
     }
 
@@ -160,12 +207,54 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus,b
       conduitDownX,
       conduitDownY,
       conduitUpX,
-      conduitUpY
+      conduitUpY,
+      ciunduitSize,
+      counduit
     } = item
-    // console.log(item)
+    
+    // 碰撞检测
+    if (status && !bird.gameOver) {
+      let birdLeft = bird.x - 20;
+      let birdRight = bird.x + 20;
+      let birdTop = bird.y - 20;
+      let birdBottom = bird.y + 20;
+      
+      let pipeLeft = conduitDownX;
+      let pipeRight = conduitDownX + ciunduitSize;
+      let pipeTopBottom = conduitUpY; // 上水管的底部
+      let pipeBottomTop = conduitDownY; // 下水管的顶部
+      
+      // 检查是否在水管的x范围内
+      if (birdRight > pipeLeft && birdLeft < pipeRight) {
+        // 检查是否撞到上水管或下水管
+        if (birdTop < pipeTopBottom || birdBottom > pipeBottomTop) {
+          bird.gameOver = true;
+        }
+      }
+    }
+    
     drawConduit(ctx, data, res.couduit, conduitDownX, conduitDownY); //绘画一组上下水管
     //drawConduit(ctx工具箱,图片,水管配置,水管距离左边的距离)
   })
-
-  // console.log(status)
+  
+  // 绘制分数
+  drawScore(ctx, bird.score);
+  
+  // 如果游戏结束，显示提示
+  if (bird.gameOver) {
+    ctx.save();
+    ctx.font = 'bold 50px Arial';
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 4;
+    ctx.textAlign = 'center';
+    let gameOverText = 'Game Over';
+    let restartText = 'Click to Restart';
+    ctx.strokeText(gameOverText, ctx.canvas.width / 2, ctx.canvas.height / 2 - 30);
+    ctx.fillText(gameOverText, ctx.canvas.width / 2, ctx.canvas.height / 2 - 30);
+    ctx.font = 'bold 30px Arial';
+    ctx.strokeText(restartText, ctx.canvas.width / 2, ctx.canvas.height / 2 + 30);
+    ctx.fillText(restartText, ctx.canvas.width / 2, ctx.canvas.height / 2 + 30);
+    ctx.restore();
+  }
 }

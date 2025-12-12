@@ -31,7 +31,7 @@ const res = {
     ],
     //网络资源地址
     long: [
-      
+
     ],
     //进度条颜色
     color: {
@@ -56,6 +56,14 @@ let status = false,
     time,
     birdStatus,
     bird = getGoldPoint(ctx, 'lt');
+
+// 初始化小鸟属性
+bird.velocity = 0; // 垂直速度
+bird.gravity = 0.5; // 重力加速度
+bird.jumpForce = -8; // 跳跃力度
+bird.score = 0; // 分数
+bird.gameOver = false; // 游戏是否结束
+
 const init = (data) => {
     let throttle = 0;
     let arr = setGonduitArr(ctx, data, res);
@@ -71,13 +79,33 @@ const init = (data) => {
 
 }
 
+// 重置游戏
+const resetGame = (data) => {
+    status = false;
+    bird = getGoldPoint(ctx, 'lt');
+    bird.velocity = 0;
+    bird.gravity = 0.5;
+    bird.jumpForce = -8;
+    bird.score = 0;
+    bird.gameOver = false;
+    birdStatus = null;
+    time = null;
+}
+
 
 
 const up = () => {
-    status = true;
+    if (bird.gameOver) {
+        // 如果游戏结束，重新开始
+        resetGame();
+        return;
+    }
+    if (!status) {
+        status = true; // 开始游戏
+    }
+    bird.velocity = bird.jumpForce; // 向上飞
     time = 0.25;
     birdStatus = 'up';
-    bird.y=100;
 }
 const down = () => {
     birdStatus = 'down'
@@ -117,8 +145,16 @@ obj(res, (index) => {
     canvas.addEventListener('mouseup', () => {
         down()
     }, false);
-    // //键盘空格开始
-    // window.addEventListener('keyup', (e) => {
-    //     e.keyCode == 32 ? status = true : null;
-    // }, false)
+    //键盘空格开始
+    window.addEventListener('keydown', (e) => {
+        if (e.keyCode == 32 || e.key === ' ') {
+            e.preventDefault(); // 防止空格键滚动页面
+            up();
+        }
+    }, false);
+    window.addEventListener('keyup', (e) => {
+        if (e.keyCode == 32 || e.key === ' ') {
+            down();
+        }
+    }, false);
 })
