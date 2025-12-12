@@ -39,10 +39,20 @@ const res = {
         ok: 'rgba(0,255,0,.6)',
     },
     couduit: {
-        upDownSpace: 280, //两个水管上下的间隙（基础值）
-        upDownSpaceMin: 180, //最小间隙（高分时的最小值）
-        upDownSpaceMax: 280, //最大间隙（初始时的最大值）
-        leftRightSpace: 200 //水管左右的间隙
+        upDownSpace: 260, //两个水管上下的间隙（基础值）
+        upDownSpaceMin: 160, //最小间隙（高分时的最小值）
+        upDownSpaceMax: 260, //最大间隙（初始时的最大值）
+        leftRightSpace: 200, //水管左右的间隙
+        // 移动端配置
+        mobile: {
+            upDownSpaceMin: 200, // 移动端最小间隙更大
+            upDownSpaceMax: 320, // 移动端最大间隙更大
+            // 横屏配置
+            landscape: {
+                upDownSpaceMin: 150, // 横屏时间隙较小（因为屏幕高度小）
+                upDownSpaceMax: 200
+            }
+        }
     }
 }
 
@@ -60,10 +70,40 @@ let status = false,
     bird = getGoldPoint(ctx, 'lt'),
     isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); // 检测是否为移动设备
 
+// 检测屏幕方向
+const isLandscape = window.innerWidth > window.innerHeight;
+
+// 根据设备类型和屏幕方向调整物理参数
+const getPhysicsParams = () => {
+    const isCurrentLandscape = window.innerWidth > window.innerHeight;
+    
+    if (isMobile) {
+        if (isCurrentLandscape) {
+            // 移动端横屏：跳跃力度更小，避免撞到顶部
+            return {
+                gravity: 0.35,  // 移动端重力更小，下落更慢
+                jumpForce: -5.5 // 横屏跳跃力度更小
+            };
+        } else {
+            // 移动端竖屏
+            return {
+                gravity: 0.35,  // 移动端重力更小，下落更慢
+                jumpForce: -7   // 竖屏跳跃力度正常
+            };
+        }
+    }
+    return {
+        gravity: 0.5,   // PC端重力
+        jumpForce: -8   // PC端跳跃力度
+    };
+};
+
+const physics = getPhysicsParams();
+
 // 初始化小鸟属性
 bird.velocity = 0; // 垂直速度
-bird.gravity = 0.5; // 重力加速度
-bird.jumpForce = -8; // 跳跃力度
+bird.gravity = physics.gravity; // 重力加速度
+bird.jumpForce = physics.jumpForce; // 跳跃力度
 bird.score = 0; // 分数
 bird.gameOver = false; // 游戏是否结束
 
@@ -91,9 +131,10 @@ const resetGame = (data) => {
     console.log('='.repeat(50));
     status = false;
     bird = getGoldPoint(ctx, 'lt');
+    const physics = getPhysicsParams();
     bird.velocity = 0;
-    bird.gravity = 0.5;
-    bird.jumpForce = -8;
+    bird.gravity = physics.gravity;
+    bird.jumpForce = physics.jumpForce;
     bird.score = 0;
     bird.gameOver = false;
     bird.gameOverTime = null;
@@ -102,7 +143,7 @@ const resetGame = (data) => {
     time = null;
     // 重新生成水管，从头开始
     arr = setGonduitArr(ctx, data, res);
-    console.log('👍 初始状态: 速度 2.0 px/帧 | 水管间隙 260-280像素');
+    console.log(`👍 初始状态: 速度 2.0 px/帧 | 重力 ${physics.gravity} | ${isMobile ? '📱移动端' : '💻PC端'}`);
 }
 
 
@@ -170,7 +211,10 @@ obj(res, (index) => {
     }, false);
     //鼠标单击抬起
     canvas.addEventListener('mouseup', () => {
-        down()
+        // 延迟调用down，让抬头动作可见
+        setTimeout(() => {
+            down()
+        }, 100);
     }, false);
     //键盘控制
     window.addEventListener('keydown', (e) => {

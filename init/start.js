@@ -101,34 +101,70 @@ const getGone = (ctx, X, couduit, size, score = 0) => {
     height: H,
     width: W
   } = ctx.canvas;
-  let {
-    upDownSpaceMin, //最小间隙
-    upDownSpaceMax, //最大间隙
-    leftRightSpace //两个水管左右间距
-  } = couduit;
+  
+  // 检测是否为移动设备和屏幕方向
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isLandscape = W > H;
+  
+  let upDownSpaceMin, upDownSpaceMax, leftRightSpace;
+  
+  // 根据设备和屏幕方向选择配置
+  if (isMobile) {
+    if (isLandscape && couduit.mobile && couduit.mobile.landscape) {
+      // 移动端横屏
+      upDownSpaceMin = couduit.mobile.landscape.upDownSpaceMin;
+      upDownSpaceMax = couduit.mobile.landscape.upDownSpaceMax;
+    } else if (couduit.mobile) {
+      // 移动端竖屏
+      upDownSpaceMin = couduit.mobile.upDownSpaceMin;
+      upDownSpaceMax = couduit.mobile.upDownSpaceMax;
+    } else {
+      // 兜底配置
+      upDownSpaceMin = couduit.upDownSpaceMin;
+      upDownSpaceMax = couduit.upDownSpaceMax;
+    }
+  } else {
+    // PC端
+    upDownSpaceMin = couduit.upDownSpaceMin;
+    upDownSpaceMax = couduit.upDownSpaceMax;
+  }
+  
+  leftRightSpace = couduit.leftRightSpace;
   
   // 根据分数动态调整间隙范围：分数越高，间隙越小
-  // 每5分减少20像素，但不低于最小值
-  let currentMax = Math.max(upDownSpaceMax - Math.floor(score / 5) * 20, upDownSpaceMin);
+  // 每3分减少25像素，但不低于最小值（加快难度提升）
+  let currentMax = Math.max(upDownSpaceMax - Math.floor(score / 3) * 25, upDownSpaceMin);
   let currentMin = Math.max(upDownSpaceMin, currentMax - 20); // 保证有一定的随机范围
   
   // 记录间隙变化
-  if (score > 0 && score % 5 === 0) {
+  if (score > 0 && score % 3 === 0) {
     console.log(`👍 分数: ${score} | 水管间隙范围: ${Math.round(currentMin)}-${Math.round(currentMax)}像素`);
   }
   
   // 随机生成水管间隙
   let upDownSpace = random(currentMin, currentMax);
   
-  let baseLine = H / 2; //参照画布中心为基线
-  let rand = random(0, upDownSpace);
+  // 获取地面高度（需要从data中获取）
+  // 假设地面高度约为屏幕高度的10-15%，这里使用保守估计
+  let groundHeight = H * 0.15; // 预留地面空间
+  let availableHeight = H - groundHeight; // 可用高度
+  
+  let baseLine = availableHeight / 2; //参照可用空间中心为基线
+  
+  // 确保水管不会超出屏幕，特别是移动端横屏时
+  // 计算上水管最低点和下水管最高点，确保有足够空间
+  let maxOffset = (availableHeight - upDownSpace) / 2 - 50; // 留50像素边距
+  maxOffset = Math.max(maxOffset, 0); // 确保不为负
+  
+  let rand = random(-maxOffset, maxOffset); // 中心点偏移范围
+  
   let {
     round
   } = Math;
   let conduitDownX = round(X); //下水管x
-  let conduitDownY = round(baseLine + rand); //下水管相对画布中线的随机范围y
+  let conduitDownY = round(baseLine + rand + upDownSpace / 2); //下水管的顶部位置
   let conduitUpX = conduitDownX; //上水管x
-  let conduitUpY = round(baseLine + rand - upDownSpace); //上水管相对画布中线的随机范围和配置文件的间隙
+  let conduitUpY = round(baseLine + rand - upDownSpace / 2); //上水管的底部位置
   let arrData = {
     conduitDownX,
     conduitDownY,
@@ -190,7 +226,7 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
     y
   } = bird;
   drawBird(ctx, data, x, y, birdStatus, time); //绘制小鸟
-  drawGround(ctx, data, status); //绘制地面
+  drawGround(ctx, data, status && !bird.gameOver); //绘制地面，游戏结束时停止移动
 
 
   arr.map((item, index, arr) => {
@@ -288,7 +324,7 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const now = Date.now();
     const timeSinceDeath = now - (bird.gameOverTime || now);
-    const threshold = 3000; // PC和移动端统一3秒
+    const threshold = 1500;
     const canRestart = timeSinceDeath >= threshold;
     
     ctx.save();
