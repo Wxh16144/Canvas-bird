@@ -121,7 +121,8 @@ const getGone = (ctx, X, couduit, size) => {
     conduitUpY,
     rightDis: W - conduitDownX,//水管距离最右边的距离
     counduit: couduit, //配置文件
-    ciunduitSize: size //水管大小
+    ciunduitSize: size, //水管大小
+    passed: false //是否已经通过
   }
   return arrData;
 }
@@ -151,7 +152,10 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
     if (bird.y >= canvasHeight - groundHeight - 30) {
       bird.y = canvasHeight - groundHeight - 30;
       bird.velocity = 0;
-      bird.gameOver = true;
+      if (!bird.gameOver) {
+        bird.gameOver = true;
+        bird.gameOverTime = Date.now(); // 记录游戏结束时间
+      }
     }
     
     // 检查是否飞出上边界
@@ -172,16 +176,18 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
   arr.map((item, index, arr) => {
     if (status && !bird.gameOver) {
       item.conduitDownX -= 2; //控制水管向右移动
+      
+      // 检查小鸟是否通过了水管（水管右边缘移到小鸟左侧）
+      if (!item.passed && item.conduitDownX + item.ciunduitSize < bird.x) {
+        item.passed = true;
+        bird.score++;
+      }
     }
 
     //判断第一个水管是否左边出去了
     if (index === 0) {
       if (item.conduitDownX < -(item.ciunduitSize * 2 + item.counduit.leftRightSpace)) {
         arr.shift(); //删除第一根水管
-        // 通过水管，得分
-        if (status && !bird.gameOver) {
-          bird.score++;
-        }
       }
     }
 
@@ -190,7 +196,6 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
       let endItem = arr[arr.length - 1]; //获取到最后一组水管
       //计算最后一组水管的x加上自己组件的宽度加上配置文件的右边距离
       let distance = endItem.conduitDownX + endItem.counduit.leftRightSpace + endItem.ciunduitSize;
-      // console.log(distance,ctx.canvas.width)
       // 如果大于画布 需要配置新的数组
       if (distance < ctx.canvas.width) {
         // let baseLine = ctx.canvas.height / 2; //参照画布中心为基线
@@ -199,7 +204,6 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
         arr.push(arrDate);
       }
     }
-    //console.log(arr.length)
 
     return item
   }).forEach((item, index, arr) => {
@@ -228,7 +232,10 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
       if (birdRight > pipeLeft && birdLeft < pipeRight) {
         // 检查是否撞到上水管或下水管
         if (birdTop < pipeTopBottom || birdBottom > pipeBottomTop) {
-          bird.gameOver = true;
+          if (!bird.gameOver) {
+            bird.gameOver = true;
+            bird.gameOverTime = Date.now(); // 记录游戏结束时间
+          }
         }
       }
     }
@@ -242,6 +249,12 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
   
   // 如果游戏结束，显示提示
   if (bird.gameOver) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const now = Date.now();
+    const timeSinceDeath = now - (bird.gameOverTime || now);
+    const threshold = 3000; // PC和移动端统一3秒
+    const canRestart = timeSinceDeath >= threshold;
+    
     ctx.save();
     ctx.font = 'bold 50px Arial';
     ctx.fillStyle = '#fff';
@@ -249,12 +262,30 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
     ctx.lineWidth = 4;
     ctx.textAlign = 'center';
     let gameOverText = 'Game Over';
-    let restartText = 'Click to Restart';
-    ctx.strokeText(gameOverText, ctx.canvas.width / 2, ctx.canvas.height / 2 - 30);
-    ctx.fillText(gameOverText, ctx.canvas.width / 2, ctx.canvas.height / 2 - 30);
-    ctx.font = 'bold 30px Arial';
-    ctx.strokeText(restartText, ctx.canvas.width / 2, ctx.canvas.height / 2 + 30);
-    ctx.fillText(restartText, ctx.canvas.width / 2, ctx.canvas.height / 2 + 30);
+    let scoreText = `Score: ${bird.score}`;
+    let restartText;
+    
+    // 根据设备类型和时间显示不同提示
+    if (isMobile) {
+      restartText = canRestart ? 'Tap to Restart' : `Wait ${Math.ceil((threshold - timeSinceDeath) / 1000)}s...`;
+    } else {
+      if (canRestart) {
+        restartText = 'Press Any Key to Restart';
+      } else {
+        restartText = `Wait ${Math.ceil((threshold - timeSinceDeath) / 1000)}s...`;
+      }
+    }
+    
+    ctx.strokeText(gameOverText, ctx.canvas.width / 2, ctx.canvas.height / 2 - 50);
+    ctx.fillText(gameOverText, ctx.canvas.width / 2, ctx.canvas.height / 2 - 50);
+    
+    ctx.font = 'bold 35px Arial';
+    ctx.strokeText(scoreText, ctx.canvas.width / 2, ctx.canvas.height / 2);
+    ctx.fillText(scoreText, ctx.canvas.width / 2, ctx.canvas.height / 2);
+    
+    ctx.font = 'bold 25px Arial';
+    ctx.strokeText(restartText, ctx.canvas.width / 2, ctx.canvas.height / 2 + 50);
+    ctx.fillText(restartText, ctx.canvas.width / 2, ctx.canvas.height / 2 + 50);
     ctx.restore();
   }
 }

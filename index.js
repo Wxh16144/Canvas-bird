@@ -55,7 +55,8 @@ let status = false,
     day = true,
     time,
     birdStatus,
-    bird = getGoldPoint(ctx, 'lt');
+    bird = getGoldPoint(ctx, 'lt'),
+    isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); // 检测是否为移动设备
 
 // 初始化小鸟属性
 bird.velocity = 0; // 垂直速度
@@ -64,9 +65,11 @@ bird.jumpForce = -8; // 跳跃力度
 bird.score = 0; // 分数
 bird.gameOver = false; // 游戏是否结束
 
+let arr; // 水管数组
+
 const init = (data) => {
     let throttle = 0;
-    let arr = setGonduitArr(ctx, data, res);
+    arr = setGonduitArr(ctx, data, res);
 
     (function start() {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -88,16 +91,29 @@ const resetGame = (data) => {
     bird.jumpForce = -8;
     bird.score = 0;
     bird.gameOver = false;
+    bird.gameOverTime = null;
     birdStatus = null;
     time = null;
+    // 重新生成水管，从头开始
+    arr = setGonduitArr(ctx, data, res);
 }
 
 
 
-const up = () => {
+const up = (isEnter = false) => {
     if (bird.gameOver) {
-        // 如果游戏结束，重新开始
-        resetGame();
+        // 如果游戏结束，检查冷却时间
+        const now = Date.now();
+        const timeSinceDeath = now - (bird.gameOverTime || now);
+        const threshold = 3000; // PC和移动端统一3秒冷却
+        
+        // 检查是否在冷却时间内
+        if (timeSinceDeath < threshold) {
+            return; // 在冷却时间内不允许重启
+        }
+        
+        // 重新开始
+        resetGame(window.gameData);
         return;
     }
     if (!status) {
@@ -113,12 +129,15 @@ const down = () => {
 
 
 obj(res, (index) => {
-    //console.log(`资源加载完成:${index}%`)
     loading(ctx, index, res.color);
 }).then(data => {
     for (let item in data) {
         data[item + '-size'] = 0.125;
     }
+    
+    // 保存data到全局，供重置游戏使用
+    window.gameData = data;
+    
     setTimeout(() => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         init(data);
@@ -131,7 +150,7 @@ obj(res, (index) => {
     }, true)
     //触摸开始
     canvas.addEventListener('touchstart', () => {
-        up();
+        up(false); // 触摸不是空格
     }, false);
     //触摸抬起
     canvas.addEventListener('touchend', () => {
@@ -139,21 +158,45 @@ obj(res, (index) => {
     }, false);
     //鼠标单击开始
     canvas.addEventListener('mousedown', () => {
-        up();
+        up(false); // 鼠标不是空格
     }, false);
     //鼠标单击抬起
     canvas.addEventListener('mouseup', () => {
         down()
     }, false);
-    //键盘空格开始
+    //键盘控制
     window.addEventListener('keydown', (e) => {
-        if (e.keyCode == 32 || e.key === ' ') {
-            e.preventDefault(); // 防止空格键滚动页面
-            up();
+        const key = e.key;
+        const keyCode = e.keyCode;
+        
+        // 回车键只用于游戏结束后重新开始
+        if (keyCode == 13 || key === 'Enter') {
+            e.preventDefault();
+            up(true); // 标记为回车键
+            return;
+        }
+        
+        // 空格键、a-z、0-9 都可以跳跃
+        const isSpace = keyCode === 32 || key === ' ';
+        const isLetter = (keyCode >= 65 && keyCode <= 90) || /^[a-zA-Z]$/.test(key);
+        const isNumber = (keyCode >= 48 && keyCode <= 57) || /^[0-9]$/.test(key);
+        
+        if (isSpace || isLetter || isNumber) {
+            e.preventDefault();
+            up(false); // 非回车键
         }
     }, false);
+    
     window.addEventListener('keyup', (e) => {
-        if (e.keyCode == 32 || e.key === ' ') {
+        const key = e.key;
+        const keyCode = e.keyCode;
+        
+        // 释放空格、a-z、0-9时小鸟下落
+        const isSpace = keyCode === 32 || key === ' ';
+        const isLetter = (keyCode >= 65 && keyCode <= 90) || /^[a-zA-Z]$/.test(key);
+        const isNumber = (keyCode >= 48 && keyCode <= 57) || /^[0-9]$/.test(key);
+        
+        if (isSpace || isLetter || isNumber) {
             down();
         }
     }, false);
