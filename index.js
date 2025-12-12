@@ -39,7 +39,9 @@ const res = {
         ok: 'rgba(0,255,0,.6)',
     },
     couduit: {
-        upDownSpace: 280, //两个水管上下的间隙
+        upDownSpace: 280, //两个水管上下的间隙（基础值）
+        upDownSpaceMin: 180, //最小间隙（高分时的最小值）
+        upDownSpaceMax: 280, //最大间隙（初始时的最大值）
         leftRightSpace: 200 //水管左右的间隙
     }
 }
@@ -84,6 +86,9 @@ const init = (data) => {
 
 // 重置游戏
 const resetGame = (data) => {
+    console.log('='.repeat(50));
+    console.log('🔄 游戏重新开始!');
+    console.log('='.repeat(50));
     status = false;
     bird = getGoldPoint(ctx, 'lt');
     bird.velocity = 0;
@@ -92,10 +97,12 @@ const resetGame = (data) => {
     bird.score = 0;
     bird.gameOver = false;
     bird.gameOverTime = null;
+    bird.lastLoggedSpeed = null; // 重置速度记录
     birdStatus = null;
     time = null;
     // 重新生成水管，从头开始
     arr = setGonduitArr(ctx, data, res);
+    console.log('👍 初始状态: 速度 2.0 px/帧 | 水管间隙 260-280像素');
 }
 
 
@@ -118,6 +125,7 @@ const up = (isEnter = false) => {
     }
     if (!status) {
         status = true; // 开始游戏
+        console.log('🎮 游戏开始!');
     }
     bird.velocity = bird.jumpForce; // 向上飞
     time = 0.25;

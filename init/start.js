@@ -89,22 +89,37 @@ export const setGonduitArr = (ctx, data, res) => {
   let count = Math.ceil((W - x) / oneWidth);
   let arr = []; //保存水管数组
   for (let i = 0; i < count; i++) {
-    let arrData = getGone(ctx, x + i * oneWidth, res.couduit, conduitDownImgW)
+    let arrData = getGone(ctx, x + i * oneWidth, res.couduit, conduitDownImgW, 0)
     arr.push(arrData)
   }
   return arr;
 };
 
-const getGone = (ctx, X, couduit, size) => {
+const getGone = (ctx, X, couduit, size, score = 0) => {
   //获取画布大小
   let {
     height: H,
     width: W
   } = ctx.canvas;
   let {
-    upDownSpace, //两个水管上下的间隙
+    upDownSpaceMin, //最小间隙
+    upDownSpaceMax, //最大间隙
     leftRightSpace //两个水管左右间距
   } = couduit;
+  
+  // 根据分数动态调整间隙范围：分数越高，间隙越小
+  // 每5分减少20像素，但不低于最小值
+  let currentMax = Math.max(upDownSpaceMax - Math.floor(score / 5) * 20, upDownSpaceMin);
+  let currentMin = Math.max(upDownSpaceMin, currentMax - 20); // 保证有一定的随机范围
+  
+  // 记录间隙变化
+  if (score > 0 && score % 5 === 0) {
+    console.log(`👍 分数: ${score} | 水管间隙范围: ${Math.round(currentMin)}-${Math.round(currentMax)}像素`);
+  }
+  
+  // 随机生成水管间隙
+  let upDownSpace = random(currentMin, currentMax);
+  
   let baseLine = H / 2; //参照画布中心为基线
   let rand = random(0, upDownSpace);
   let {
@@ -122,7 +137,8 @@ const getGone = (ctx, X, couduit, size) => {
     rightDis: W - conduitDownX,//水管距离最右边的距离
     counduit: couduit, //配置文件
     ciunduitSize: size, //水管大小
-    passed: false //是否已经通过
+    passed: false, //是否已经通过
+    upDownSpace: upDownSpace //保存该水管的实际间隙
   }
   return arrData;
 }
@@ -155,6 +171,10 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
       if (!bird.gameOver) {
         bird.gameOver = true;
         bird.gameOverTime = Date.now(); // 记录游戏结束时间
+        console.log('='.repeat(50));
+        console.log('💥 游戏结束! 撞到地面');
+        console.log(`🏆 最终得分: ${bird.score}`);
+        console.log('='.repeat(50));
       }
     }
     
@@ -175,12 +195,25 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
 
   arr.map((item, index, arr) => {
     if (status && !bird.gameOver) {
-      item.conduitDownX -= 2; //控制水管向右移动
+      // 根据分数缓慢加速：基础速度2 + 每5分增加0.2速度，最大4.5
+      let baseSpeed = 2;
+      let speedIncrease = Math.floor(bird.score / 5) * 0.2;
+      let maxSpeed = 4.5;
+      let currentSpeed = Math.min(baseSpeed + speedIncrease, maxSpeed);
+      
+      // 记录速度变化（仅在速度变化时记录一次）
+      if (!bird.lastLoggedSpeed || bird.lastLoggedSpeed !== currentSpeed) {
+        console.log(`🚀 速度提升! 当前速度: ${currentSpeed.toFixed(1)} px/帧 (分数: ${bird.score})`);
+        bird.lastLoggedSpeed = currentSpeed;
+      }
+      
+      item.conduitDownX -= currentSpeed; //控制水管向左移动
       
       // 检查小鸟是否通过了水管（水管右边缘移到小鸟左侧）
       if (!item.passed && item.conduitDownX + item.ciunduitSize < bird.x) {
         item.passed = true;
         bird.score++;
+        console.log(`✅ 得分! 当前分数: ${bird.score}`);
       }
     }
 
@@ -198,9 +231,8 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
       let distance = endItem.conduitDownX + endItem.counduit.leftRightSpace + endItem.ciunduitSize;
       // 如果大于画布 需要配置新的数组
       if (distance < ctx.canvas.width) {
-        // let baseLine = ctx.canvas.height / 2; //参照画布中心为基线
         let newItem = { ...arr[0] };
-        let arrDate = getGone(ctx, ctx.canvas.width, newItem.counduit, newItem.ciunduitSize);
+        let arrDate = getGone(ctx, ctx.canvas.width, newItem.counduit, newItem.ciunduitSize, bird.score);
         arr.push(arrDate);
       }
     }
@@ -235,6 +267,10 @@ export const startModule = (ctx, data, res, arr, status, day, time, birdStatus, 
           if (!bird.gameOver) {
             bird.gameOver = true;
             bird.gameOverTime = Date.now(); // 记录游戏结束时间
+            console.log('='.repeat(50));
+            console.log('💥 游戏结束! 撞到水管');
+            console.log(`🏆 最终得分: ${bird.score}`);
+            console.log('='.repeat(50));
           }
         }
       }
