@@ -31,12 +31,7 @@ const res = {
     ],
     //网络资源地址
     long: [
-        'http://www.wxhboy.com/img/b.jpg',
-        // 'http://www.wxhboy.com/pic/flower1.jpg',
-        // 'http://www.wxhboy.com/pic/flower2.jpg',
-        // 'http://www.wxhboy.com/pic/flower3.jpg',
-        // 'http://www.wxhboy.com/pic/flower5.jpg',
-        // 'http://www.wxhboy.com/img/n.jpg',
+      
     ],
     //进度条颜色
     color: {
